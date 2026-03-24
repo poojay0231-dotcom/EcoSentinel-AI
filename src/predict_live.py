@@ -61,6 +61,7 @@ def predict_live(city, input_date,
 
     anomaly_label = "Anomaly" if pred == -1 else "Normal"
     severity = "High" if score < -0.05 else ("Medium" if score < 0 else "Low")
+    recommendations = get_recommendations(live, severity)
     if anomaly_label == "Normal":
         severity = "Normal"
 
@@ -72,6 +73,7 @@ def predict_live(city, input_date,
         "alert": build_alert(live["city"], anomaly_label, severity),
         "possible_cause": get_possible_cause(live),
         "anomaly_score": float(score),
+        "recommendations": recommendations,
         **live
     }
     return result
@@ -86,3 +88,60 @@ if __name__ == "__main__":
             print(f"{k}: {v}")
     except Exception as e:
         print("Error:", e)
+
+def get_recommendations(row, severity):
+    recommendations = []
+
+    # 🌫️ Pollution-based
+    if row.get("PM2.5", 0) > 120 or row.get("PM10", 0) > 180:
+        recommendations.extend([
+            "Avoid outdoor activities, especially in traffic-heavy areas.",
+            "Wear an N95 mask when going outside.",
+            "Keep windows closed and use air purifiers indoors."
+        ])
+
+    # 🚗 Traffic pollution
+    elif row.get("NO2", 0) > 80:
+        recommendations.extend([
+            "Avoid busy roads during peak hours.",
+            "Use public transport or carpooling.",
+            "Sensitive individuals should stay indoors."
+        ])
+
+    # 🌡️ Heat
+    elif row.get("temperature_2m", 0) > 38:
+        recommendations.extend([
+            "Stay hydrated throughout the day.",
+            "Avoid going out in peak afternoon hours.",
+            "Wear light and breathable clothing."
+        ])
+
+    # 💧 Dry air
+    elif row.get("Humidity", 0) < 25:
+        recommendations.extend([
+            "Use humidifiers indoors.",
+            "Drink plenty of fluids.",
+            "Avoid long exposure to AC environments."
+        ])
+
+    # ⚠️ If no specific issue → general recommendations
+    if not recommendations:
+        recommendations = [
+            "Maintain a healthy indoor environment with proper ventilation.",
+            "Stay updated with daily air quality reports.",
+            "Adopt eco-friendly habits like reducing vehicle usage."
+        ]
+
+    # 🔥 Severity priority
+    if severity == "High":
+        recommendations = [
+            "Avoid all outdoor activities and follow government advisories.",
+            "Use masks and air purifiers indoors.",
+            "Seek medical attention if experiencing breathing issues."
+        ]
+    elif severity == "Medium":
+        recommendations.insert(0, "Limit prolonged outdoor exposure and stay informed on air quality.")
+
+    return " | ".join(recommendations[:3])
+
+    

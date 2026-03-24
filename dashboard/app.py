@@ -38,8 +38,15 @@ if st.button("Check Anomaly"):
                 "SO2": round(result["SO2"], 2),
                 "Temperature (2m)": round(result["temperature_2m"], 2),
                 "Humidity": round(result["Humidity"], 2),
-                "Anomaly Score": round(result["anomaly_score"], 4)
+                "Anomaly Score": round(result["anomaly_score"], 4),
+                
             })
+
+            if "recommendations" in result:
+                  st.subheader("⚠️ Recommendations")
+    
+                  for rec in result["recommendations"].split("|"):
+                        st.write("• " + rec.strip())
 
         except Exception as e:
             st.error(f"Error: {e}")
