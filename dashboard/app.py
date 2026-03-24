@@ -43,7 +43,7 @@ if st.button("Check Anomaly"):
             })
 
             if "recommendations" in result:
-                  st.subheader("⚠️ Recommendations")
+                  st.subheader("Recommendations")
     
                   for rec in result["recommendations"].split("|"):
                         st.write("• " + rec.strip())

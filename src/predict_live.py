@@ -12,26 +12,59 @@ FEATURE_COLS = [
 
 def get_possible_cause(row):
     causes = []
+    mild_factors = []
 
+    # PM2.5
     if row["PM2.5"] > 120:
-        causes.append("Sudden PM2.5 spike")
+        causes.append("High PM2.5")
+    elif row["PM2.5"] > 50:
+        mild_factors.append("slightly elevated PM2.5")
+
+    # PM10
     if row["PM10"] > 180:
-        causes.append("High particulate matter")
+        causes.append("High PM10")
+    elif row["PM10"] > 30:   # 👈 lowered threshold
+        mild_factors.append("moderately elevated PM10")
+
+    # NO2
     if row["NO2"] > 80:
-        causes.append("Elevated NO2 level")
-    if row["SO2"] > 50:
-        causes.append("Elevated SO2 level")
+        causes.append("High NO2")
+    elif row["NO2"] > 20:
+        mild_factors.append("slight NO2 variation")
+
+    # CO
     if row["CO"] > 1000:
-        causes.append("Elevated CO level")
-    if row["temperature_2m"] > 38:
-        causes.append("Unusual temperature rise")
-    if row["Humidity"] < 25:
-        causes.append("Low humidity condition")
+        causes.append("High CO")
+    elif row["CO"] > 300:
+        mild_factors.append("moderately elevated CO")
 
-    if not causes:
-        return "Mixed environmental variation detected"
+    # SO2
+    if row["SO2"] > 50:
+        causes.append("High SO2")
+    elif row["SO2"] > 10:
+        mild_factors.append("slight SO2 variation")
 
-    return ", ".join(causes)
+    # Temperature
+    if row["temperature_2m"] > 35:
+        mild_factors.append("warm temperature conditions")
+
+    # Humidity
+    if row["Humidity"] < 40:
+        mild_factors.append("lower humidity")
+
+    # 🔥 FINAL LOGIC
+
+    # If strong causes
+    if len(causes) >= 2:
+        return "Combination of major factors: " + ", ".join(causes)
+
+    if len(causes) == 1 and mild_factors:
+        return causes[0] + " along with " + ", ".join(mild_factors[:2])
+
+    if mild_factors:
+        return "Multiple mild variations: " + ", ".join(mild_factors[:3])
+
+    return "Subtle environmental fluctuations across parameters"
 
 
 def build_alert(city, anomaly_label, severity):
